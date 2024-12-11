@@ -1,4 +1,4 @@
-# Interprety: The Lexo Code Editor & Interpreter
+# Interprety: A Web-Based Code Editor for Writing and Running Lexo Code
 
 Welcome to **Interprety**, a web application built with the **MERN stack** (MongoDB, Express, React, Node.js) and **TypeScript**. Interprety allows users to write, execute, and save code in **Lexo**, a simple and easy-to-learn programming language.
 
