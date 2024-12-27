@@ -1,24 +1,53 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
+import Editor from '@monaco-editor/react';
+import axios from 'axios';
 import './App.css';
 
-function App() {
+const App: React.FC = () => {
+  const editorRef = useRef<any>(null);
+  
+  function handleEditorDidMount(editor: any) {
+    editorRef.current = editor;
+  }
+
+  function runCode() {
+    const code = editorRef.current.getValue();
+    axios.post('http://localhost:5000/api/interpreter/run', { code })
+      .then((res) => {
+        const consoleElement = document.querySelector('.console pre');
+        if (consoleElement) {
+          consoleElement.textContent = res.data.output;
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  }
+  
   return (
-    <div className="App">
-      <header className="App-header">
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <div className="container">
+      <h1 className="title">Lexo Code Editor</h1>
+  
+      <div className="editor-container">
+        <Editor
+          height="50vh"
+          defaultLanguage="javascript"
+          defaultValue=""
+          theme="vs-dark"
+          className="editor"
+          onMount={handleEditorDidMount}
+        />
+      </div>
+
+      <button onClick={runCode} className="run-button">Run</button>
+      
+      <p className="console-label">Console</p>
+
+      <div className="console">
+        <pre></pre>
+      </div>
+    </div> 
   );
-}
+};
 
 export default App;
