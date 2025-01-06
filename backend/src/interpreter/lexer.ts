@@ -2,21 +2,24 @@ import { Token } from './token';
 
 export class Lexer {
   private code: string;
-  private position: number;
-  private line: number;
+  private pointer: number;
+  private line: number; 
+  private column: number;
   private currentChar: string | null;
 
   constructor(code: string) {
     this.code = code;
-    this.position = 0;
-    this.line = 1;
-    this.currentChar = this.code[this.position];
+    this.pointer = 0;
+    this.line = 1; 
+    this.column = 1;
+    this.currentChar = this.code[this.pointer];
   }
 
   private advance(): void {
-    this.position++;
-    if (this.position < this.code.length) {
-      this.currentChar = this.code[this.position];
+    this.pointer++;
+    this.column++;
+    if (this.pointer < this.code.length) {
+      this.currentChar = this.code[this.pointer];
     } else {
       this.currentChar = null; // End of input
     }
@@ -26,7 +29,7 @@ export class Lexer {
     while (this.currentChar !== null && /\s/.test(this.currentChar)) {
       if(this.currentChar === '\n') {
         this.line++;
-        this.position = 0;
+        this.column = 1;
         this.advance();
       } else {
         this.advance();
@@ -40,7 +43,7 @@ export class Lexer {
     this.skipWhitespace();
 
     if (this.currentChar === null) {
-      return { type: 'END', value: null, line: this.line, position: this.position}; // End of input
+      return { type: 'END', value: null, line: this.line, column: this.column}; // End of input
     }
 
     if (/[a-zA-Z_]/.test(this.currentChar)) {
@@ -53,69 +56,104 @@ export class Lexer {
 
     if (this.currentChar === '+') {
       this.advance();
-      return { type: 'PLUS', value: '+', line: this.line, position: this.position };
+      return { type: 'PLUS', value: '+', line: this.line, column: this.column - 1};
     }
 
     if (this.currentChar === '-') {
       this.advance();
-      return { type: 'MINUS', value: '-', line: this.line, position: this.position};
+      return { type: 'MINUS', value: '-', line: this.line, column: this.column - 1};
     }
 
     if (this.currentChar === '*') {
       this.advance();
-      return { type: 'MULTIPLY', value: '*', line: this.line, position: this.position};
+      return { type: 'MULTIPLY', value: '*', line: this.line, column: this.column - 1};
     }
 
     if (this.currentChar === '/') {
       this.advance();
-      return { type: 'DIVIDE', value: '/', line: this.line, position: this.position};
+      return { type: 'DIVIDE', value: '/', line: this.line, column: this.column - 1};
     }
 
     if (this.currentChar === '=') {
+      if (this.pointer + 1 < this.code.length && this.code[this.pointer + 1] === '=') {
+        this.advance();
+        this.advance();
+        return { type: 'EQUAL', value: '==', line: this.line, column: this.column - 2};
+      }
+
       this.advance();
-      return { type: 'ASSIGNMENT', value: '=', line: this.line, position: this.position};
+      return { type: 'ASSIGNMENT', value: '=', line: this.line, column: this.column - 1};
     }
 
     if (this.currentChar === '!') {
+      if (this.pointer + 1 < this.code.length && this.code[this.pointer + 1] === '=') {
+        this.advance();
+        this.advance();
+        return { type: 'NOTEQUAL', value: '!=', line: this.line, column: this.column - 2};
+      }
       this.advance();
-      return { type: 'NOT', value: '!', line: this.line , position: this.position};
+      return { type: 'NOT', value: '!', line: this.line , column: this.column - 1};
     }
 
     if (this.currentChar === '%') {
       this.advance();
-      return { type: 'MODULO', value: '%', line: this.line, position: this.position};
+      return { type: 'MODULO', value: '%', line: this.line, column: this.column - 1};
     }
 
     if (this.currentChar === '(') {
       this.advance();
-      return { type: 'LPAREN', value: '(', line: this.line, position: this.position};
+      return { type: 'LPAREN', value: '(', line: this.line, column: this.column - 1};
     }
 
     if (this.currentChar === ')') {
       this.advance();
-      return { type: 'RPAREN', value: ')', line: this.line, position: this.position};
+      return { type: 'RPAREN', value: ')', line: this.line, column: this.column - 1};
     }
 
     if (this.currentChar === '[') {
       this.advance();
-      return { type: 'LBRACKET', value: '[', line: this.line, position: this.position};
+      return { type: 'LBRACKET', value: '[', line: this.line, column: this.column - 1};
     }
 
     if (this.currentChar === ']') {
       this.advance();
-      return { type: 'RBRACKET', value: ']', line: this.line, position: this.position};
+      return { type: 'RBRACKET', value: ']', line: this.line, column: this.column - 1};
     }
 
     if (this.currentChar === '{') {
       this.advance();
-      return { type: 'LBRACE', value: '{', line: this.line, position: this.position};
+      return { type: 'LBRACE', value: '{', line: this.line, column: this.column - 1};
     }
 
     if (this.currentChar === '}') {
       this.advance();
-      return { type: 'RBRACE', value: '}', line: this.line, position: this.position};
+      return { type: 'RBRACE', value: '}', line: this.line, column: this.column - 1};
     }
 
+    if (this.currentChar === '>') {
+      if (this.pointer + 1 < this.code.length && this.code[this.pointer + 1] === '=') {
+        this.advance();
+        this.advance();
+        return { type: 'GREATEREQUAL', value: '>=', line: this.line, column: this.column - 2};
+      } 
+      
+      this.advance
+      return { type: 'GREATER', value: '>', line: this.line, column: this.column - 1}
+    }
+
+    if (this.currentChar === '<') {
+      console.log(this.currentChar)
+      if (this.pointer + 1 < this.code.length && this.code[this.pointer + 1] === '=') {
+        console.log(this.code[this.pointer + 1])
+        this.advance();
+        this.advance();
+        return { type: 'LESSEQUAL', value: '<=', line: this.line, column: this.column - 2};
+      }
+
+      this.advance();
+      return { type: 'LESS', value: '<', line: this.line, column: this.column - 1};
+    }
+        
     return null; // Handle other cases or throw an error
   }
 
@@ -127,24 +165,33 @@ export class Lexer {
       this.advance();
     }
 
-    if(identifier === 'and') {
-      return { type: 'AND', value: identifier, line: this.line, position: this.position};
+    if(identifier === 'int') {
+      return { type: 'INT', value: identifier, line: this.line, column: this.column - identifier.length};
+    } else if(identifier === 'double') {
+      return { type: 'DOUBLE', value: identifier, line: this.line, column: this.column - identifier.length};
+    } else if(identifier === 'bool') {
+      return { type: 'BOOL', value: identifier, line: this.line, column: this.column - identifier.length};
+    } else if(identifier === 'char') {
+      return { type: 'CHAR', value: identifier, line: this.line, column: this.column - identifier.length};
+    } else if(identifier === 'string') {
+      return { type: 'STRING', value: identifier, line: this.line, column: this.column - identifier.length};
+    } else if(identifier === 'and') {
+      return { type: 'AND', value: identifier, line: this.line, column: this.column - identifier.length};
     } else if(identifier === 'or') {
-      return { type: 'OR', value: identifier, line: this.line, position: this.position};
+      return { type: 'OR', value: identifier, line: this.line, column: this.column - identifier.length};
     } else if(identifier === 'xor') {
-      return { type: 'XOR', value: identifier, line: this.line, position: this.position};
+      return { type: 'XOR', value: identifier, line: this.line, column: this.column - identifier.length};
     } else  if(identifier === 'not') {
-      return { type: 'NOT', value: identifier, line: this.line, position: this.position};
+      return { type: 'NOT', value: identifier, line: this.line, column: this.column - identifier.length};
     } else if (identifier === 'true' || identifier === 'false') {
-      return { type: 'BOOL', value: identifier === 'true', line: this.line, position: this.position};
+      return { type: 'LITERAL', literal: {type: 'BOOL', value: identifier === 'true'}, line: this.line, column: this.column - identifier.length};
     } else if (identifier === 'print') {
-      return { type: 'PRINT', value: identifier, line: this.line, position: this.position};
+      return { type: 'PRINT', value: identifier, line: this.line, column: this.column - identifier.length};
     } else if (identifier === 'input') {
-      return { type: 'INPUT', value: identifier, line: this.line, position: this.position};
+      return { type: 'INPUT', value: identifier, line: this.line, column: this.column - identifier.length};
     }
 
-
-    return { type: 'IDENTIFIER', value: identifier, line: this.line, position: this.position};
+    return { type: 'IDENTIFIER', value: identifier, line: this.line, column: this.column - identifier.length};
   }
 
   // Consume a number
@@ -162,9 +209,9 @@ export class Lexer {
     }
 
     if(isInt) {
-      return { type: 'INT', value: parseInt(number, 10), line: this.line, position: this.position };
+      return { type: 'LITERAL', literal: {type: 'INT', value: parseInt(number, 10) }, line: this.line, column: this.column };
     } else {
-      return { type: 'DOUBLE', value: parseFloat(number), line: this.line, position: this.position };
+      return { type: 'LITERAL', literal: {type: 'DOUBLE', value: parseFloat(number) }, line: this.line, column: this.column };
     }
   }
 
