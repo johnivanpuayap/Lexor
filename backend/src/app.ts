@@ -10,3 +10,7 @@ app.use('/api/interpreter', interpreterRoutes); // API for running the interpret
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+
+// To run the server that reloads if there are changes
+// 

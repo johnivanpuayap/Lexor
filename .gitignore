@@ -44,3 +44,4 @@ Thumbs.db
 # Git ignore settings for specific files/folders
 frontend/.env
 backend/.env
+backend/src/interpreter/TODO.md

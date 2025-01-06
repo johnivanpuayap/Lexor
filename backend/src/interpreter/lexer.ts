@@ -1,25 +1,18 @@
-// Define the types of tokens
-type Token = 
-  | { type: 'IDENTIFIER', value: string }
-  | { type: 'NUMBER', value: number }
-  | { type: 'PLUS', value: string }
-  | { type: 'MINUS', value: string }
-  | { type: 'EQUALS', value: string }
-  | { type: 'END', value: null };
+import { Token } from './token';
 
-// Lexer class to tokenize the input code
 export class Lexer {
   private code: string;
   private position: number;
+  private line: number;
   private currentChar: string | null;
 
   constructor(code: string) {
     this.code = code;
     this.position = 0;
+    this.line = 1;
     this.currentChar = this.code[this.position];
   }
 
-  // Move the cursor to the next character
   private advance(): void {
     this.position++;
     if (this.position < this.code.length) {
@@ -29,10 +22,16 @@ export class Lexer {
     }
   }
 
-  // Skip whitespace characters
   private skipWhitespace(): void {
     while (this.currentChar !== null && /\s/.test(this.currentChar)) {
-      this.advance();
+      if(this.currentChar === '\n') {
+        this.line++;
+        this.position = 0;
+        this.advance();
+      } else {
+        this.advance();
+      }
+      
     }
   }
 
@@ -41,7 +40,7 @@ export class Lexer {
     this.skipWhitespace();
 
     if (this.currentChar === null) {
-      return { type: 'END', value: null }; // End of input
+      return { type: 'END', value: null, line: this.line, position: this.position}; // End of input
     }
 
     if (/[a-zA-Z_]/.test(this.currentChar)) {
@@ -54,17 +53,67 @@ export class Lexer {
 
     if (this.currentChar === '+') {
       this.advance();
-      return { type: 'PLUS', value: '+' };
+      return { type: 'PLUS', value: '+', line: this.line, position: this.position };
     }
 
     if (this.currentChar === '-') {
       this.advance();
-      return { type: 'MINUS', value: '-' };
+      return { type: 'MINUS', value: '-', line: this.line, position: this.position};
+    }
+
+    if (this.currentChar === '*') {
+      this.advance();
+      return { type: 'MULTIPLY', value: '*', line: this.line, position: this.position};
+    }
+
+    if (this.currentChar === '/') {
+      this.advance();
+      return { type: 'DIVIDE', value: '/', line: this.line, position: this.position};
     }
 
     if (this.currentChar === '=') {
       this.advance();
-      return { type: 'EQUALS', value: '=' };
+      return { type: 'ASSIGNMENT', value: '=', line: this.line, position: this.position};
+    }
+
+    if (this.currentChar === '!') {
+      this.advance();
+      return { type: 'NOT', value: '!', line: this.line , position: this.position};
+    }
+
+    if (this.currentChar === '%') {
+      this.advance();
+      return { type: 'MODULO', value: '%', line: this.line, position: this.position};
+    }
+
+    if (this.currentChar === '(') {
+      this.advance();
+      return { type: 'LPAREN', value: '(', line: this.line, position: this.position};
+    }
+
+    if (this.currentChar === ')') {
+      this.advance();
+      return { type: 'RPAREN', value: ')', line: this.line, position: this.position};
+    }
+
+    if (this.currentChar === '[') {
+      this.advance();
+      return { type: 'LBRACKET', value: '[', line: this.line, position: this.position};
+    }
+
+    if (this.currentChar === ']') {
+      this.advance();
+      return { type: 'RBRACKET', value: ']', line: this.line, position: this.position};
+    }
+
+    if (this.currentChar === '{') {
+      this.advance();
+      return { type: 'LBRACE', value: '{', line: this.line, position: this.position};
+    }
+
+    if (this.currentChar === '}') {
+      this.advance();
+      return { type: 'RBRACE', value: '}', line: this.line, position: this.position};
     }
 
     return null; // Handle other cases or throw an error
@@ -77,17 +126,46 @@ export class Lexer {
       identifier += this.currentChar;
       this.advance();
     }
-    return { type: 'IDENTIFIER', value: identifier };
+
+    if(identifier === 'and') {
+      return { type: 'AND', value: identifier, line: this.line, position: this.position};
+    } else if(identifier === 'or') {
+      return { type: 'OR', value: identifier, line: this.line, position: this.position};
+    } else if(identifier === 'xor') {
+      return { type: 'XOR', value: identifier, line: this.line, position: this.position};
+    } else  if(identifier === 'not') {
+      return { type: 'NOT', value: identifier, line: this.line, position: this.position};
+    } else if (identifier === 'true' || identifier === 'false') {
+      return { type: 'BOOL', value: identifier === 'true', line: this.line, position: this.position};
+    } else if (identifier === 'print') {
+      return { type: 'PRINT', value: identifier, line: this.line, position: this.position};
+    } else if (identifier === 'input') {
+      return { type: 'INPUT', value: identifier, line: this.line, position: this.position};
+    }
+
+
+    return { type: 'IDENTIFIER', value: identifier, line: this.line, position: this.position};
   }
 
   // Consume a number
   private consumeNumber(): Token {
     let number = '';
-    while (this.currentChar !== null && /[0-9]/.test(this.currentChar)) {
+    let isInt = true;
+    while (this.currentChar !== null && (/[0-9]/.test(this.currentChar) || this.currentChar === '.')) {
+      
+      if(this.currentChar === '.') {
+        isInt = false;  
+      }
+
       number += this.currentChar;
       this.advance();
     }
-    return { type: 'NUMBER', value: parseInt(number, 10) };
+
+    if(isInt) {
+      return { type: 'INT', value: parseInt(number, 10), line: this.line, position: this.position };
+    } else {
+      return { type: 'DOUBLE', value: parseFloat(number), line: this.line, position: this.position };
+    }
   }
 
   // Tokenize the entire code string
